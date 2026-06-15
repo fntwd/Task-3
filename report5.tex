@@ -1,0 +1,402 @@
+\documentclass[12pt,a4paper]{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{indentfirst}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{geometry}
+
+\geometry{left=2.5cm, right=1.5cm, top=2cm, bottom=2cm}
+
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{teal},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=5pt,
+    tabsize=4
+}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \large
+        МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ
+
+        Федеральное государственное бюджетное образовательное учреждение
+        высшего образования
+
+        \textbf{АДЫГЕЙСКИЙ ГОСУДАРСТВЕННЫЙ УНИВЕРСИТЕТ}
+        \vspace{0.25cm}
+
+        Инженерно-физический факультет
+
+        Кафедра управления в технических системах
+        \vfill
+
+        \textsc{Отчет по практике}\\[5mm]
+
+        {\LARGE Программная реализация численного метода\\[3mm]
+        \textit{Вычисление обратной матрицы методом Гаусса}}
+        \bigskip
+
+        1 курс, группа 1УТС
+    \end{center}
+    \vfill
+
+    \newlength{\ML}
+    \settowidth{\ML}{«\underline{\hspace{0.7cm}}» \underline{\hspace{2cm}}}
+    \hfill\begin{minipage}{0.5\textwidth}
+        Выполнил:\\
+        \underline{\hspace{\ML}} В.\,Е.~Чешенко\\
+        «\underline{\hspace{0.7cm}}» \underline{\hspace{2cm}} 2026 г.
+    \end{minipage}%
+    \bigskip
+
+    \hfill\begin{minipage}{0.5\textwidth}
+        Руководитель:\\
+        \underline{\hspace{\ML}} С.\,В.~Теплоухов\\
+        «\underline{\hspace{0.7cm}}» \underline{\hspace{2cm}} 2024 г.
+    \end{minipage}%
+    \vfill
+
+    \begin{center}
+        Майкоп, 2026 г.
+    \end{center}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Введение}
+\label{sec:intro}
+
+\subsection{Постановка задачи}
+
+Для квадратной матрицы $A$ порядка $n$ требуется найти обратную матрицу $A^{-1}$
+такую, что:
+\begin{equation}
+    A \cdot A^{-1} = A^{-1} \cdot A = E,
+    \label{eq:def}
+\end{equation}
+где $E$~--- единичная матрица порядка~$n$.
+
+Обратная матрица существует тогда и только тогда, когда матрица $A$ является
+\textbf{невырожденной}, то есть $\det(A) \neq 0$.
+
+\subsection{Теоретическая часть}
+
+\subsubsection{Метод нахождения обратной матрицы}
+
+Используется метод присоединения единичной матрицы (метод Гаусса-Жордана).
+Идея основана на следующем наблюдении: если умножить обе части тождества
+$A \cdot A^{-1} = E$ на $A^{-1}$ слева, то:
+\[
+    A^{-1} \cdot [A \,|\, E] = [E \,|\, A^{-1}].
+\]
+
+Таким образом, если к матрице $A$ справа приписать единичную матрицу того же
+порядка и привести левую часть к единичной с помощью элементарных преобразований
+строк, то правая часть автоматически станет $A^{-1}$.
+
+\subsubsection{Алгоритм}
+
+\begin{enumerate}
+    \item \textbf{Построение сдвоенной матрицы.}
+          К матрице $A$ размера $n \times n$ приписывается единичная матрица $E$:
+          \[
+              [A\,|\,E] =
+              \begin{pmatrix}
+                  a_{11} & \cdots & a_{1n} & 1 & \cdots & 0 \\
+                  \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
+                  a_{n1} & \cdots & a_{nn} & 0 & \cdots & 1
+              \end{pmatrix}.
+          \]
+
+    \item \textbf{Прямой и обратный ход Гаусса-Жордана.}
+          Для каждого столбца $k = 1, \ldots, n$:
+          \begin{enumerate}
+              \item Выбрать ненулевой ведущий элемент в столбце $k$
+                    (при необходимости переставить строки).
+                    Если ненулевого нет~--- матрица вырождена, $A^{-1}$ не существует.
+              \item Нормировать строку $k$: разделить все её элементы на
+                    ведущий $a_{kk}$.
+              \item Исключить $k$-й столбец из \emph{всех} остальных строк
+                    (не только нижних):
+                    \[
+                        a_{ij} \leftarrow a_{ij} - a_{ik} \cdot a_{kj},
+                        \quad i \neq k.
+                    \]
+          \end{enumerate}
+
+    \item \textbf{Извлечение результата.}
+          После $n$ итераций левая половина принимает вид $E$,
+          а правая половина содержит $A^{-1}$:
+          \[
+              [A\,|\,E] \;\xrightarrow{\text{преобразования}}\; [E\,|\,A^{-1}].
+          \]
+\end{enumerate}
+
+\subsubsection{Пример вручную}
+
+Найдём обратную матрицу для:
+\[
+    A =
+    \begin{pmatrix}
+        2 & 1 \\
+        5 & 3
+    \end{pmatrix}.
+\]
+
+Строим сдвоенную матрицу:
+\[
+    \left(\begin{array}{cc|cc}
+        2 & 1 & 1 & 0 \\
+        5 & 3 & 0 & 1
+    \end{array}\right).
+\]
+
+\textbf{Шаг 1} ($k=1$): нормируем строку~1 на $a_{11}=2$:
+\[
+    \left(\begin{array}{cc|cc}
+        1 & 0{,}5 & 0{,}5 & 0 \\
+        5 & 3     & 0     & 1
+    \end{array}\right).
+\]
+Исключаем из строки~2 ($\text{строка}_2 - 5 \cdot \text{строка}_1$):
+\[
+    \left(\begin{array}{cc|cc}
+        1 & 0{,}5 & 0{,}5  & 0 \\
+        0 & 0{,}5 & -2{,}5 & 1
+    \end{array}\right).
+\]
+
+\textbf{Шаг 2} ($k=2$): нормируем строку~2 на $a_{22}=0{,}5$:
+\[
+    \left(\begin{array}{cc|cc}
+        1 & 0{,}5 & 0{,}5 & 0 \\
+        0 & 1     & -5    & 2
+    \end{array}\right).
+\]
+Исключаем из строки~1 ($\text{строка}_1 - 0{,}5 \cdot \text{строка}_2$):
+\[
+    \left(\begin{array}{cc|cc}
+        1 & 0 &  3 & -1 \\
+        0 & 1 & -5 &  2
+    \end{array}\right).
+\]
+
+Результат:
+\[
+    A^{-1} =
+    \begin{pmatrix}
+         3 & -1 \\
+        -5 &  2
+    \end{pmatrix}.
+\]
+
+Проверка: $A \cdot A^{-1} = \begin{pmatrix}2&1\\5&3\end{pmatrix}
+\begin{pmatrix}3&-1\\-5&2\end{pmatrix} =
+\begin{pmatrix}1&0\\0&1\end{pmatrix} = E$. \checkmark
+
+\section{Ход работы}
+\label{sec:work}
+
+\subsection{Описание программы}
+
+Программа реализована на языке Python. Основные функции:
+\begin{itemize}
+    \item \texttt{input\_int(prompt, min\_val, max\_val)} ---
+          ввод целого числа с проверкой диапазона;
+    \item \texttt{input\_float(prompt)} ---
+          ввод вещественного числа с обработкой ошибок;
+    \item \texttt{input\_matrix(n)} ---
+          построчный ввод квадратной матрицы $n \times n$;
+    \item \texttt{print\_matrix(matrix, title)} ---
+          форматированный вывод матрицы;
+    \item \texttt{inverse\_matrix(matrix)} ---
+          реализация алгоритма; возвращает $A^{-1}$ или
+          \texttt{None} при вырожденной матрице;
+    \item \texttt{mat\_mul(a, b)} ---
+          перемножение двух матриц для проверки;
+    \item \texttt{verify(original, inv)} ---
+          проверка $A \cdot A^{-1} = E$ с выводом максимального отклонения.
+\end{itemize}
+
+\subsection{Контроль вводимых данных}
+
+\begin{enumerate}
+    \item Порядок матрицы $n$ должен быть \emph{целым числом} от~1 до~8.
+          При ошибке выдаётся сообщение и запрашивается повторный ввод.
+    \item Элементы матрицы должны быть \emph{вещественными числами}.
+          Нечисловой ввод обрабатывается без аварийного завершения.
+    \item Если в процессе преобразований ведущий элемент оказывается нулём
+          во всём столбце, программа сообщает о вырожденности матрицы
+          и завершает работу корректно.
+\end{enumerate}
+
+\subsection{Код программы}
+\label{sec:code}
+
+\begin{lstlisting}[caption={inverse\_matrix.py --- ключевые функции}]
+import copy
+
+def inverse_matrix(matrix):
+    n = len(matrix)
+    # Build augmented matrix [A | E]
+    aug = []
+    for i in range(n):
+        row = copy.copy(matrix[i])
+        for j in range(n):
+            row.append(1.0 if i == j else 0.0)
+        aug.append(row)
+
+    for col in range(n):
+        # Find non-zero pivot
+        pivot_row = None
+        for row in range(col, n):
+            if abs(aug[row][col]) > 1e-12:
+                pivot_row = row
+                break
+        if pivot_row is None:
+            return None  # singular matrix
+
+        # Swap rows if needed
+        if pivot_row != col:
+            aug[col], aug[pivot_row] = aug[pivot_row], aug[col]
+
+        # Normalize pivot row
+        pivot = aug[col][col]
+        aug[col] = [x / pivot for x in aug[col]]
+
+        # Eliminate from ALL other rows
+        for row in range(n):
+            if row == col:
+                continue
+            factor = aug[row][col]
+            aug[row] = [aug[row][k] - factor * aug[col][k]
+                        for k in range(2 * n)]
+
+    # Extract right half -> A^(-1)
+    return [aug[i][n:] for i in range(n)]
+
+
+def mat_mul(a, b):
+    n = len(a)
+    return [[sum(a[i][k] * b[k][j] for k in range(n))
+             for j in range(n)] for i in range(n)]
+\end{lstlisting}
+
+\subsection{Пример работы программы}
+
+Найдём обратную матрицу для:
+\begin{equation}
+    A =
+    \begin{pmatrix}
+        1 & 2 & 3 \\
+        0 & 1 & 4 \\
+        5 & 6 & 0
+    \end{pmatrix}.
+    \label{eq:example}
+\end{equation}
+
+\begin{table}[h]
+    \centering
+    \caption{Исходная матрица~\eqref{eq:example}}
+    \label{tab:input}
+    \begin{tabular}{|c|c|c|}
+        \hline
+        1 & 2 & 3 \\
+        \hline
+        0 & 1 & 4 \\
+        \hline
+        5 & 6 & 0 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Вывод программы:
+
+\begin{verbatim}
+Обратная матрица A^(-1):
++------------+------------+------------+
+| -24.00000  |  18.00000  |   5.00000  |
+|  20.00000  | -15.00000  |  -4.00000  |
+|  -5.00000  |   4.00000  |   1.00000  |
++------------+------------+------------+
+
+Проверка A * A^(-1) = E:
+  Произведение A * A^(-1):
++------------+------------+------------+
+|  1.00000   |  0.00000   |  0.00000   |
+|  0.00000   |  1.00000   |  0.00000   |
+|  0.00000   |  0.00000   |  1.00000   |
++------------+------------+------------+
+
+  Максимальное отклонение от E: 0.00e+00
+  Результат верен.
+\end{verbatim}
+
+\subsection{Обработка особых случаев}
+
+При вводе вырожденной матрицы, например:
+\[
+    B =
+    \begin{pmatrix}
+        1 & 2 & 3 \\
+        4 & 5 & 6 \\
+        7 & 8 & 9
+    \end{pmatrix}
+    \quad (\det B = 0)
+\]
+программа выводит:
+\begin{verbatim}
+Обратная матрица не существует
+(матрица вырождена: определитель равен нулю).
+\end{verbatim}
+
+\section{Заключение}
+
+В ходе практической работы реализована программа на языке Python,
+вычисляющая обратную матрицу методом Гаусса-Жордана. В программе обеспечены:
+
+\begin{itemize}
+    \item построение сдвоенной матрицы $[A\,|\,E]$ и приведение её к виду $[E\,|\,A^{-1}]$;
+    \item обнаружение вырожденных матриц с корректным завершением работы;
+    \item проверка результата через произведение $A \cdot A^{-1}$
+          с выводом максимального отклонения от~$E$;
+    \item контроль корректности всех вводимых данных.
+\end{itemize}
+
+Метод протестирован на матрицах различных порядков, включая вырожденный и
+тривиальный случаи. Результаты совпали с эталонными значениями с машинной точностью.
+
+\begin{thebibliography}{9}
+    \bibitem{samarsky}
+        Самарский А.\,А., Гулин А.\,В.
+        \textit{Численные методы.} ---
+        М.: Наука, 1989. --- 432~с.
+
+    \bibitem{bahvalov}
+        Бахвалов Н.\,С., Жидков Н.\,П., Кобельков Г.\,М.
+        \textit{Численные методы.} ---
+        М.: БИНОМ, 2008. --- 636~с.
+
+    \bibitem{python}
+        Van Rossum G., Drake F.\,L.
+        \textit{Python 3 Reference Manual.} ---
+        Scotts Valley, CA: CreateSpace, 2009.
+\end{thebibliography}
+
+\end{document}
